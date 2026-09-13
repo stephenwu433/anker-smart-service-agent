@@ -1,0 +1,56 @@
+# This repository was initialized in a shared Python workspace. Ignore everything
+# by default and explicitly include only this project's files.
+/*
+!/.env.example
+!/.dockerignore
+!/.gitignore
+!/AGENTS.md
+!/CHANGELOG.md
+!/Dockerfile
+!/README.md
+!/pyproject.toml
+!/config/
+!/config/**
+!/data/
+!/data/README.md
+!/data/raw/
+!/data/raw/.gitkeep
+!/data/interim/
+!/data/interim/.gitkeep
+!/data/processed/
+!/data/processed/.gitkeep
+!/docs/
+!/docs/**
+!/sandbox/
+!/sandbox/**
+!/scripts/
+!/scripts/**
+!/src/
+!/src/**
+!/tests/
+!/tests/**
+
+# Local and generated files inside included directories
+**/__pycache__/
+**/*.py[cod]
+**/.DS_Store
+/.env
+/.venv/
+/.pytest_cache/
+/.ruff_cache/
+/.coverage
+/htmlcov/
+/*.egg-info/
+/dist/
+/build/
+
+# Runtime data must not be committed. Only the directory structure is tracked.
+/data/raw/**
+!/data/raw/.gitkeep
+/data/interim/**
+!/data/interim/.gitkeep
+/data/processed/**
+!/data/processed/.gitkeep
+/data/mongodb/**
+/sandbox/output/**
+!/sandbox/output/.gitkeep
