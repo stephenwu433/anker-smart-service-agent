@@ -11,6 +11,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 - 从团队既有服务架构抽取全新的充电设备售后 demo。
 - 新增无法充电的关键追问、单步排障、异常发热/冒烟/异味/鼓包风险退出与人工升级。
+- 适配梅见项目的数据指纹、Gold/Challenge/Holdout 隔离、run_id 与发布门禁方法。
 - Added repository-wide development instructions and documentation conventions.
 - Added the initial FastAPI service skeleton and health endpoint.
 - 新增 development、test 和 production 的 config 模板与类型化 runtime settings。

@@ -34,7 +34,6 @@ from smart_service_agent.models import (
 from smart_service_agent.repository import StorageRepository, utc_now
 
 HIGH_RISK_TERMS = ("冒烟", "异味", "起火", "漏液", "鼓包", "异常发热")
-NEGATION_PREFIXES = ("没有", "没", "不", "未", "无")
 HYPOTHETICAL_PREFIXES = ("会不会", "是否会", "会否", "怕", "担心")
 RESOLVED_TERMS = ("已经好了", "已恢复", "现在好了", "已消退")
 
@@ -285,7 +284,7 @@ class ConversationOrchestrator:
 
     @staticmethod
     def _is_charging_issue_context(text: str, existing: StoredConversation | None) -> bool:
-        charging_terms = ("无法充电", "充电中断", "充电不稳定")
+        charging_terms = ("无法充电", "充不上电", "没反应", "充电中断", "充电不稳定")
         return any(term in text for term in charging_terms) or bool(
             existing
             and any(term in existing.case.original_statement for term in charging_terms)
@@ -423,9 +422,13 @@ class ConversationOrchestrator:
             index = text.find(term)
             if index < 0:
                 continue
-            prefix = text[max(0, index - 4) : index]
-            non_assertive = (*NEGATION_PREFIXES, *HYPOTHETICAL_PREFIXES)
-            if any(prefix.endswith(marker) for marker in non_assertive):
+            prefix = text[max(0, index - 8) : index]
+            negated = re.search(
+                r"(?:没有|没|不|未|无)(?:闻到|出现|发生|发现|感到|检测到)?$",
+                prefix,
+            )
+            hypothetical = any(prefix.endswith(marker) for marker in HYPOTHETICAL_PREFIXES)
+            if negated or hypothetical:
                 continue
             context = text[max(0, index - 12) : index]
             third_party = re.search(

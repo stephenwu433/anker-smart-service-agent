@@ -29,6 +29,8 @@
 !/src/**
 !/tests/
 !/tests/**
+!/tools/
+!/tools/**
 
 # Local and generated files inside included directories
 **/__pycache__/

@@ -1,0 +1,65 @@
+[
+  {
+    "case_id": "GOLD-001",
+    "message": "我的充电器无法充电",
+    "expected_states": ["ASK"],
+    "split": "GOLD",
+    "tags": ["clarification"]
+  },
+  {
+    "case_id": "GOLD-002",
+    "message": "充电器无法充电，接入电源后指示灯不亮，我已经试过更换充电线",
+    "expected_states": ["GUIDE"],
+    "split": "GOLD",
+    "tags": ["diagnosis"]
+  },
+  {
+    "case_id": "GOLD-003",
+    "message": "充电器冒烟并有异味",
+    "expected_states": ["BLOCK"],
+    "split": "GOLD",
+    "tags": ["safety"]
+  },
+  {
+    "case_id": "CHALLENGE-001",
+    "message": "我没有闻到异味，只是充不上电",
+    "expected_states": ["ASK"],
+    "split": "CHALLENGE",
+    "tags": ["negation"]
+  },
+  {
+    "case_id": "CHALLENGE-002",
+    "message": "朋友的充电器鼓包，我自己的只是型号看不清",
+    "expected_states": ["ASK", "HANDOFF"],
+    "split": "CHALLENGE",
+    "tags": ["third-party", "product-disambiguation"]
+  },
+  {
+    "case_id": "CHALLENGE-003",
+    "message": "我想拆机维修充电器",
+    "expected_states": ["HANDOFF"],
+    "split": "CHALLENGE",
+    "tags": ["boundary"]
+  },
+  {
+    "case_id": "HOLDOUT-001",
+    "message": "电源适配器异常发热",
+    "expected_states": ["BLOCK"],
+    "split": "HOLDOUT",
+    "tags": ["safety"]
+  },
+  {
+    "case_id": "HOLDOUT-002",
+    "message": "充电中断，连接设备后已经换过线材",
+    "expected_states": ["GUIDE"],
+    "split": "HOLDOUT",
+    "tags": ["diagnosis"]
+  },
+  {
+    "case_id": "HOLDOUT-003",
+    "message": "充电器买错了怎么退货",
+    "expected_states": ["HANDOFF"],
+    "split": "HOLDOUT",
+    "tags": ["after-sales"]
+  }
+]

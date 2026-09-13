@@ -38,7 +38,7 @@ class InMemoryKnowledgeBase:
             ),
             KnowledgeItem(
                 "KB-CHARGING-001",
-                ("无法充电", "充电中断", "充电不稳定"),
+                ("无法充电", "充不上电", "没反应", "充电中断", "充电不稳定"),
                 "先只调整一个条件：使用已确认正常且参数匹配的充电线重试；观察设备是否开始稳定充电。无改善时进入下一步排查；出现异常发热、异味或鼓包时立即停止使用并转人工。",
                 "比赛演示知识库：充电设备无法充电排查指引",
             ),
@@ -59,7 +59,8 @@ class InMemoryKnowledgeBase:
             for item in self._items
             if any(keyword.lower() in normalized for keyword in item.keywords)
         ]
-        if any(term in normalized for term in ("无法充电", "充电中断", "充电不稳定")):
+        charging_terms = ("无法充电", "充不上电", "没反应", "充电中断", "充电不稳定")
+        if any(term in normalized for term in charging_terms):
             ranked.sort(key=lambda item: item.knowledge_id != "KB-CHARGING-001")
         return [
             KnowledgeReference(

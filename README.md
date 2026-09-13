@@ -33,6 +33,7 @@ scripts/dev.sh
 - MongoDB 会话、审计、反馈、幂等人工事件和客服动作持久化。
 - 人工客服视图、事件队列和基础服务洞察 API。
 - Ticket 人工回复、动作完成、用户确认解决和重开事件，以及消费者/客服最小 web workspace。
+- 可审计 Eval：数据指纹、`GOLD` / `CHALLENGE` / `HOLDOUT` 隔离、风险门禁和 `run_id` 报告。
 
 当前附件只进行 metadata 校验；系统会明确告知无法读取内容并建议转人工。订单系统、真实文件
 存储、登录鉴权和 webhook 等 external integration 尚未选型，不会在演示中伪造已接入状态。
@@ -67,6 +68,8 @@ scripts/                  # 开发与验证脚本
 config、data、sandbox 和 scripts 的完整说明见
 [开发环境文档](docs/development.md)。
 
+Eval 的数据隔离、发布门禁和运行方式见 [可审计服务 Eval](docs/evaluation.md)。
+
 ## 当前边界
 
 内置规则与知识仅用于 deterministic demo，不代表 production 模型效果、真实商品知识或正式客服
@@ -80,3 +83,7 @@ SLA。上线前仍需接入真实 LLM/RAG、认证与 RBAC、文件处理、订�
 [`ttchu1221/Loreal-ai-service-intelligence`](https://github.com/ttchu1221/Loreal-ai-service-intelligence)
 `feat/backend` 分支抽取通用服务架构后适配。已移除应用内的原品牌标识、美妆知识与旧 Git 历史；
 内置充电故障知识仅用于可重放 demo，不代表安克官方售后政策、产品数据或 SLA。
+
+数据指纹、分层验证、风险门禁和可审计运行方法由团队的
+[`stylewth/Meijian-Narrative-Intelligence`](https://github.com/stylewth/Meijian-Narrative-Intelligence)
+方法适配；未复制梅见品牌语料、候选叙事、飞书表数据或历史运行产物。
