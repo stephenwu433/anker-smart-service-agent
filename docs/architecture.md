@@ -42,16 +42,16 @@ route 只负责 HTTP contract，状态判断、文案选择和审计数据生成
 interface 后，强制使用 `EmpathyCard` 校验 model output，并为 timeout、空输出和非法 Schema 保留
 确定性降级到 `HANDOFF`。真实 RAG 应替换知识库实现，但不得绕过知识 ID、版本和来源字段。
 
-知识检索已封装为可注入的 `KnowledgeProvider`。当前 provider 会按意图过滤，并将不良反应、功效
-承诺和交易问题判定为 demo 知识不可回答，避免“命中任意关键词就直接 RESOLVE”。生产 RAG 返回的
+知识检索已封装为可注入的 `KnowledgeProvider`。当前 provider 会按意图过滤，并将拆机维修、电池
+更换和交易政策判定为 demo 知识不可回答，避免“命中任意关键词就直接 RESOLVE”。生产 RAG 返回的
 结果仍须执行 relevance、权限、时效和 answerability 校验，不能把向量相似度直接等同于可回答。
 
 意图识别已经封装为可注入的 `IntentProvider`。外部 provider 只有在结构化结果校验通过且置信度
 达到 `INTENT_MINIMUM_CONFIDENCE` 时才会被采用；timeout、异常、非法结果和低置信度统一降级到
-`RuleBasedIntentProvider`。高风险症状和必要追问在 provider 调用前执行，确保外部模型故障时安全
+`RuleBasedIntentProvider`。设备安全风险和必要追问在 provider 调用前执行，确保外部模型故障时安全
 规则仍有效。意图来源和置信度仅进入 Empathy Card 与客服审计视图，不暴露给消费者。
 
-每轮安全与意图判断以当前消息为主，历史仅用于补充已确认的选购上下文，避免旧症状永久污染后续
+每轮安全与意图判断以当前消息为主，历史仅用于补充已确认的选购上下文，避免旧风险描述永久污染后续
 问题。rule-based 安全 fallback 可识别常见否定、假设、第三方主体和已恢复表达；它只能降低明显
 误报，不能替代 LLM/NLU 的语义判断。附件在文件 provider 接入前会明确说明无法读取并进入人工
 确认流程，不会根据 filename 或 metadata 猜测内容。

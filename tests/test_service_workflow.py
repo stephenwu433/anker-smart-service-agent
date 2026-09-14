@@ -13,7 +13,9 @@ def make_client(tmp_path) -> TestClient:
 def test_low_risk_usage_question_resolves_with_traceable_evidence(tmp_path) -> None:
     client = make_client(tmp_path)
 
-    response = client.post("/v1/conversations", json={"message": "第一次使用面霜，应该怎么用？"})
+    response = client.post(
+        "/v1/conversations", json={"message": "第一次使用移动电源，应该怎么用？"}
+    )
 
     assert response.status_code == 201
     body = response.json()
@@ -23,7 +25,7 @@ def test_low_risk_usage_question_resolves_with_traceable_evidence(tmp_path) -> N
     assert "risk_level" not in body
 
 
-def test_shade_question_asks_once_then_resolves_without_repeating_fact(tmp_path) -> None:
+def test_model_question_asks_once_then_resolves_without_repeating_fact(tmp_path) -> None:
     client = make_client(tmp_path)
     first = client.post("/v1/conversations", json={"message": "我想选充电器型号"}).json()
 
@@ -50,7 +52,7 @@ def test_high_risk_flow_blocks_recommendation_and_creates_idempotent_handoff(tmp
 
     assert blocked["state"] == "BLOCK"
     assert blocked["evidence"] == []
-    assert "停止继续使用" in blocked["message"]
+    assert "停止使用并断开电源" in blocked["message"]
     assert "confirm_handoff" in blocked["available_actions"]
 
     path = f"/v1/conversations/{blocked['conversation_id']}/handoff"
@@ -73,7 +75,7 @@ def test_high_risk_flow_blocks_recommendation_and_creates_idempotent_handoff(tmp
 def test_unknown_knowledge_fails_explicitly_to_handoff(tmp_path) -> None:
     client = make_client(tmp_path)
 
-    response = client.post("/v1/conversations", json={"message": "告诉我一个不存在的产品功效"})
+    response = client.post("/v1/conversations", json={"message": "查询一个知识库没有的设备故障"})
 
     assert response.status_code == 201
     assert response.json()["state"] == "HANDOFF"
@@ -169,7 +171,7 @@ def test_old_risk_message_does_not_block_a_new_unrelated_turn(tmp_path) -> None:
     assert card["risk_level"] == "low"
 
 
-def test_negated_hypothetical_and_third_party_symptoms_do_not_false_block(tmp_path) -> None:
+def test_negated_hypothetical_and_third_party_risks_do_not_false_block(tmp_path) -> None:
     client = make_client(tmp_path)
 
     for message in ("我没有异味，只想问怎么用", "这个会不会异常发热？", "我朋友的充电器鼓包"):
@@ -177,7 +179,7 @@ def test_negated_hypothetical_and_third_party_symptoms_do_not_false_block(tmp_pa
         assert body["state"] != "BLOCK", message
 
 
-def test_safety_qualifiers_do_not_hide_a_new_active_symptom(tmp_path) -> None:
+def test_safety_qualifiers_do_not_hide_a_new_active_risk(tmp_path) -> None:
     client = make_client(tmp_path)
 
     for message in ("其他设备的充电器冒烟", "之前异常发热已经好了，但现在又有异味"):
@@ -185,7 +187,7 @@ def test_safety_qualifiers_do_not_hide_a_new_active_symptom(tmp_path) -> None:
         assert body["state"] == "BLOCK", message
 
 
-def test_adverse_reaction_is_not_answered_by_generic_usage_article(tmp_path) -> None:
+def test_unsupported_repair_is_not_answered_by_generic_usage_article(tmp_path) -> None:
     client = make_client(tmp_path)
 
     body = client.post("/v1/conversations", json={"message": "充电器拆机维修怎么做"}).json()
@@ -218,7 +220,7 @@ def test_attachment_is_explicitly_not_treated_as_processed(tmp_path) -> None:
     assert "无法读取" in body["message"]
 
 
-def test_declining_non_risk_handoff_does_not_show_medical_warning(tmp_path) -> None:
+def test_declining_non_risk_handoff_does_not_show_device_safety_warning(tmp_path) -> None:
     client = make_client(tmp_path)
     conversation = client.post("/v1/conversations", json={"message": "查询一个未知产品"}).json()
     response = client.post(
@@ -226,5 +228,5 @@ def test_declining_non_risk_handoff_does_not_show_medical_warning(tmp_path) -> N
         json={"accepted": False, "idempotency_key": "decline-unknown"},
     ).json()
 
-    assert "医疗" not in response["message"]
+    assert "断电" not in response["message"]
     assert "缺少可靠依据" in response["message"]

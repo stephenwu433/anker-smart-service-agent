@@ -39,7 +39,7 @@ def test_uses_valid_confident_primary_intent() -> None:
 
 def test_provider_timeout_falls_back_to_rules() -> None:
     client = TestClient(create_app(MemoryRepository(), FailingProvider()))
-    card = _agent_card(client, "第一次使用面霜")
+    card = _agent_card(client, "第一次使用移动电源")
     assert card["intent"] == "usage"
     assert card["intent_source"] == "rules"
 

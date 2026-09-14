@@ -163,7 +163,8 @@ def create_app(
                 result_id=conversation.last_result_id,
                 state=conversation.state,
                 message=(
-                    "已记录你暂不转人工。请继续留意情况；如症状明显、持续或加重，请及时寻求专业医疗帮助。"
+                    "已记录你暂不转人工。请保持设备断电并停止使用，不要拆机或再次通电测试；"
+                    "如出现起火、冒烟或漏液，请远离可燃物并联系人工客服处理。"
                     if conversation.empathy_card.risk_level.value == "high"
                     else (
                         "已记录你暂不转人工。由于当前缺少可靠依据，我不会猜测答案；"
@@ -328,7 +329,7 @@ def _consumer_workspace_html() -> str:
 body{font:16px system-ui;max-width:760px;margin:3rem auto;padding:0 1rem}
 textarea,input,button{font:inherit;padding:.7rem;margin:.35rem 0;width:100%}
 button{width:auto}.result{white-space:pre-wrap;background:#f5f5f5;padding:1rem}</style>
-<h1>智能充电故障排查</h1><p>每次只补充一个必要信息，并只调整一个条件。你也可以随时转人工。</p>
+<h1>安克智能服务助手（比赛演示）</h1><p>面向充电器、移动电源等设备，每次只补充一个必要信息，并只调整一个条件。你也可以随时转人工。</p>
 <input id="product" placeholder="产品名称（可选）">
 <textarea id="message" rows="5" placeholder="描述问题和已经尝试的方法"></textarea>
 <button onclick="send()">开始排查</button><div id="result" class="result" aria-live="polite"></div>

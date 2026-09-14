@@ -33,15 +33,15 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Defined Chinese as the default language for non-technical communication while keeping
   established technical terms in English.
 - 调整对话理解为当前消息优先，避免历史风险词污染后续轮次，并修正交易与使用等重叠意图优先级。
-- 回复会按意图选择文案；未接入文件处理时明确告知附件不可读取，非风险转人工拒绝不再显示医疗提示。
+- 回复会按意图选择文案；未接入文件处理时明确告知附件不可读取，设备风险回复统一为断电、停止使用、禁止拆机与人工跟进。
 - 更新 README、API 和 architecture 文档，补充当前能力、请求链路、external integration 边界及
   production 分阶段接入路线，并修正过时的客服审计主体描述。
 - 人工回复、动作完成、用户确认解决和重开改为独立 Ticket 事件，避免虚假完成。
 
 ### Fixed
 
-- 修复否定、假设、第三方主体和已恢复症状被简单关键词误判为高风险的问题。
-- 修复通用知识因单个关键词命中而错误回答不良反应、功效承诺或订单问题的问题。
+- 修复否定、假设、第三方主体和已恢复风险描述被简单关键词误判为高风险的问题。
+- 修复通用知识因单个关键词命中而错误回答拆机维修、电池更换或订单问题的问题。
 - 修复固定场景、固定推断和伪造 `demo_agent` 审计主体造成的误导。
 
 ## [0.1.0] - 2026-09-09

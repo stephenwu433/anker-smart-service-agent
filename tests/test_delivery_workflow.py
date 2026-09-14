@@ -117,5 +117,5 @@ def test_ticket_result_events_remain_distinct_and_support_reopen() -> None:
 def test_minimum_workspaces_are_available() -> None:
     client = make_client()
 
-    assert "智能充电故障排查" in client.get("/workspace/consumer").text
+    assert "安克智能服务助手（比赛演示）" in client.get("/workspace/consumer").text
     assert "人工客服工作台" in client.get("/workspace/agent").text

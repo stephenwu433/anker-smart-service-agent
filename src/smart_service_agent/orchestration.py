@@ -214,7 +214,7 @@ class ConversationOrchestrator:
             inferences=[],
             missing_information=missing,
             risk_level=risk,
-            risk_reasons=[f"命中高风险症状词：{term}" for term in risk_terms],
+            risk_reasons=[f"命中设备安全风险词：{term}" for term in risk_terms],
             knowledge_refs=refs,
             next_state=state,
             schema_version=self.settings.schema_version,
@@ -224,7 +224,9 @@ class ConversationOrchestrator:
     def _consumer_copy(card: EmpathyCard) -> tuple[str, list[str]]:
         if card.next_state == ConversationState.BLOCK:
             return (
-                "你提到的情况需要谨慎处理。请先停止继续使用相关产品，避免自行叠加其他刺激性产品；如症状明显、持续或加重，请及时寻求专业医疗帮助。是否同意我将现有信息提交给人工客服跟进？",
+                "你描述的情况可能涉及设备安全风险。请立即停止使用并断开电源，不要拆机、"
+                "再次通电或继续充电；将设备移离可燃物，并在确保人身安全的前提下等待处理。"
+                "是否同意我将设备信息和当前风险提交给人工客服跟进？",
                 ["confirm_handoff", "decline_handoff"],
             )
         if card.next_state == ConversationState.ASK:
@@ -414,8 +416,8 @@ class ConversationOrchestrator:
     @staticmethod
     def _active_risk_terms(text: str) -> list[str]:
         resolved_history = any(term in text for term in RESOLVED_TERMS)
-        renewed_symptom = any(term in text for term in ("但是", "但", "不过", "又", "仍", "现在还"))
-        if resolved_history and not renewed_symptom:
+        renewed_risk = any(term in text for term in ("但是", "但", "不过", "又", "仍", "现在还"))
+        if resolved_history and not renewed_risk:
             return []
         found: list[str] = []
         for term in HIGH_RISK_TERMS:
@@ -443,10 +445,10 @@ class ConversationOrchestrator:
 
     @staticmethod
     def _needs_model_details(text: str, existing: StoredConversation | None) -> bool:
-        shade_context = "型号" in text or bool(
+        model_selection_context = "型号" in text or bool(
             existing and existing.empathy_card.intent == Intent.PURCHASE
         )
-        if not shade_context:
+        if not model_selection_context:
             return False
         informative = (
             "iPhone",
@@ -541,7 +543,7 @@ class ConversationOrchestrator:
             risk_reasons=card.risk_reasons,
             knowledge_refs=card.knowledge_refs,
             executed_actions=actions,
-            suggested_next_step="优先核实症状与使用情况，并按授权范围跟进"
+            suggested_next_step="优先核实设备型号、供电状态与安全风险，并按授权范围跟进"
             if card.risk_level == RiskLevel.HIGH
             else "核实诉求并补充可靠依据",
             event=event,

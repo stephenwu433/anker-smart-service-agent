@@ -1,4 +1,4 @@
-#  Smart Service Agent
+# Anker Smart Service Agent
 
 面向充电设备售后的 AI service intelligence backend，聚焦故障定位、单步排障引导、
 风险识别和带上下文的人工升级。
@@ -25,7 +25,7 @@ scripts/dev.sh
 ## 已实现能力
 
 - 消费者多轮咨询及 `GUIDE`、`RESOLVE`、`ASK`、`HANDOFF`、`BLOCK` 状态编排；
-  `GUIDE` 用于充电设备无法充电单条件排查，`RESOLVE` 保留兼容既有通用咨询。
+  `GUIDE` 用于充电设备无法充电单条件排查，`RESOLVE` 用于有审核依据的使用与选型咨询。
 - Case 事实版本、更正与未知项，以及建议执行、跳过、观察和结果相互独立的 Attempt 记录。
 - 当前消息优先的风险识别，支持常见否定、假设、第三方主体和已恢复表达。
 - 可注入的 LLM 意图识别边界，以及 timeout、非法输出和低置信度 fallback。
@@ -79,9 +79,9 @@ SLA。上线前仍需接入真实 LLM/RAG、认证与 RBAC、文件处理、订�
 
 ## 来源与边界
 
-本仓库由团队的
+本仓库的通用服务架构最初由团队的
 [`ttchu1221/Loreal-ai-service-intelligence`](https://github.com/ttchu1221/Loreal-ai-service-intelligence)
-`feat/backend` 分支抽取通用服务架构后适配。已移除应用内的原品牌标识、美妆知识与旧 Git 历史；
+`feat/backend` 分支抽取后重新适配。当前运行时规则、知识、示例和测试均面向充电设备；
 内置充电故障知识仅用于可重放 demo，不代表安克官方售后政策、产品数据或 SLA。
 
 数据指纹、分层验证、风险门禁和可审计运行方法由团队的
