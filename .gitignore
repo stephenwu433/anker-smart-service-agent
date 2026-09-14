@@ -4,6 +4,8 @@
 !/.env.example
 !/.dockerignore
 !/.gitignore
+!/.cursor/
+!/.cursor/**
 !/AGENTS.md
 !/CHANGELOG.md
 !/Dockerfile
@@ -54,5 +56,6 @@
 /data/processed/**
 !/data/processed/.gitkeep
 /data/mongodb/**
+/data/*.log
 /sandbox/output/**
 !/sandbox/output/.gitkeep

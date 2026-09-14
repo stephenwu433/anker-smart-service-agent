@@ -1,0 +1,23 @@
+{
+  "name": "Smart Service Agent",
+  "user": "ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "install": "bash scripts/bootstrap.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "api",
+      "command": "bash scripts/dev.sh",
+      "description": "FastAPI dev server (uvicorn) on http://127.0.0.1:8000; serves /health, /docs and the /v1 API."
+    }
+  ],
+  "ports": [
+    {
+      "name": "api",
+      "port": 8000
+    }
+  ]
+}

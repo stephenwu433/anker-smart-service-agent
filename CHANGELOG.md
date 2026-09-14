@@ -27,6 +27,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - 新增充电设备无法充电 `GUIDE` 短链路、可更正 Case、独立 Attempt 执行记录和带版本 Ticket 结果事件。
 - 新增消费者与人工客服最小 web workspace，以及部署恢复说明。
 - 新增非 root container deployment package、health check 和 secret/data 排除规则。
+- 新增 Cursor Cloud Agent 开发环境（`.cursor/environment.json` 与 Dockerfile）：Ubuntu 24.04
+  base image、Python 3.12 与 MongoDB 8.0、idempotent install/start 脚本、常驻 API 终端与端口
+  暴露，并补充对应文档。
 
 ### Changed
 

@@ -11,6 +11,8 @@
   production 接入路线。
 - [MongoDB](mongodb.md)：本地启动、collection、index 与 production 安全要求。
 - [部署与恢复](deployment.md)：启动检查、稳定版本、恢复和降级边界。
+- [Cloud Agent 开发环境](cloud-agent.md)：`.cursor/environment.json` 的 base image、install、
+  start 与 terminals 约定。
 
 ## 后续文档
 
