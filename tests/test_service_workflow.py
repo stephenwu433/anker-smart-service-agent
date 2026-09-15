@@ -69,7 +69,7 @@ def test_high_risk_flow_blocks_recommendation_and_creates_idempotent_handoff(tmp
     assert handoff["original_messages"] == ["充电器持续异常发热并有异味"]
     assert handoff["confirmed_facts"]
     assert handoff["risk_level"] == "high"
-    assert handoff["rule_version"] == "risk-rules-v1"
+    assert handoff["rule_version"] == "risk-rules-v2"
 
 
 def test_unknown_knowledge_fails_explicitly_to_handoff(tmp_path) -> None:
@@ -156,7 +156,7 @@ def test_database_failure_returns_safe_actionable_error(tmp_path) -> None:
     assert "secret-host" not in response.text
 
 
-def test_old_risk_message_does_not_block_a_new_unrelated_turn(tmp_path) -> None:
+def test_old_risk_message_does_not_resume_troubleshooting_after_topic_change(tmp_path) -> None:
     client = make_client(tmp_path)
     first = client.post("/v1/conversations", json={"message": "充电器冒烟"}).json()
 
@@ -165,10 +165,12 @@ def test_old_risk_message_does_not_block_a_new_unrelated_turn(tmp_path) -> None:
         json={"message": "我现在想问订单退款"},
     ).json()
 
-    assert second["state"] == "HANDOFF"
+    assert first["state"] == "BLOCK"
+    assert second["state"] == "BLOCK"
+    assert "尚未解除" in second["message"]
     card = client.get(f"/v1/agent/conversations/{first['conversation_id']}").json()["empathy_card"]
-    assert card["intent"] == "after_sales"
-    assert card["risk_level"] == "low"
+    assert card["risk_level"] == "high"
+    assert card["next_state"] == "BLOCK"
 
 
 def test_negated_hypothetical_and_third_party_risks_do_not_false_block(tmp_path) -> None:
@@ -218,6 +220,22 @@ def test_attachment_is_explicitly_not_treated_as_processed(tmp_path) -> None:
 
     assert body["state"] == "HANDOFF"
     assert "无法读取" in body["message"]
+
+
+def test_risk_message_with_attachment_blocks_before_unread_handoff(tmp_path) -> None:
+    client = make_client(tmp_path)
+    body = client.post(
+        "/v1/conversations",
+        json={
+            "message": "充电器冒烟了",
+            "attachments": [{"kind": "product_image", "filename": "smoke.jpg"}],
+        },
+    ).json()
+
+    assert body["state"] == "BLOCK"
+    assert "停止使用" in body["message"]
+    assert "无法读取" in body["message"]
+    assert "confirm_handoff" in body["available_actions"]
 
 
 def test_declining_non_risk_handoff_does_not_show_device_safety_warning(tmp_path) -> None:

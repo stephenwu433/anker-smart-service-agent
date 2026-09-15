@@ -9,6 +9,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Added
 
+- 风险停止现在写入持续生效的 `safety_hold`，覆盖消息、步骤观察、事实更正和反馈入口。
+- `GUIDE` 会按允许动作目录自动创建当前 Attempt，并根据观察结果决定继续、结束或转人工。
+- 事实更正会按依赖撤回尚未执行的步骤，并拒绝基于过期版本的迟到 PATCH。
+- 人工接管包包含消费者排查 Attempt 与 Case 更正；未结束工单复用原事件。
+- 新增消费者确认解决 endpoint，客服不能代填 `user_confirmed_resolved`。
 - 从团队既有服务架构抽取全新的充电设备售后 demo。
 - 新增无法充电的关键追问、单步排障、异常发热/冒烟/异味/鼓包风险退出与人工升级。
 - 适配梅见项目的数据指纹、Gold/Challenge/Holdout 隔离、run_id 与发布门禁方法。
@@ -30,6 +35,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Changed
 
+- Attempt 创建改为只接受知识目录中的 `action_id`；步骤反馈返回下一轮消费者状态。
+- 未解除的设备风险不能被换话题、继续使用或附件转人工覆盖。
+- `SCHEMA_VERSION` 调整为 `1.1`，`RULE_VERSION` 调整为 `risk-rules-v2`。
 - Defined Chinese as the default language for non-technical communication while keeping
   established technical terms in English.
 - 调整对话理解为当前消息优先，避免历史风险词污染后续轮次，并修正交易与使用等重叠意图优先级。
@@ -40,6 +48,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Fixed
 
+- 修复高风险会话在后续轮次重新进入排查，以及冒烟消息被附件转人工抢先处理的问题。
+- 修复更正事实后旧步骤仍保持可执行、交接包看不到消费者排查记录，以及同一未结束案件重复建单的问题。
 - 修复否定、假设、第三方主体和已恢复风险描述被简单关键词误判为高风险的问题。
 - 修复通用知识因单个关键词命中而错误回答拆机维修、电池更换或订单问题的问题。
 - 修复固定场景、固定推断和伪造 `demo_agent` 审计主体造成的误导。

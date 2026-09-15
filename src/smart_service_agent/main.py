@@ -8,11 +8,13 @@ from pymongo.errors import PyMongoError
 
 from smart_service_agent import __version__
 from smart_service_agent.config import get_settings
+from smart_service_agent.errors import ConflictError, InvalidRequestError
 from smart_service_agent.intent import IntentProvider
 from smart_service_agent.knowledge import KnowledgeProvider
 from smart_service_agent.models import (
     AgentConversationView,
     AttemptCreateRequest,
+    AttemptFeedbackResponse,
     AttemptRecord,
     AttemptUpdateRequest,
     CaseRecord,
@@ -24,6 +26,7 @@ from smart_service_agent.models import (
     HandoffDecision,
     InsightMetric,
     InsightsResponse,
+    ResolutionRequest,
     ServiceActionRequest,
     TicketRecord,
     TicketResultRequest,
@@ -121,27 +124,31 @@ def create_app(
     def create_attempt(conversation_id: str, request: AttemptCreateRequest) -> AttemptRecord:
         try:
             attempt = orchestrator.create_attempt(conversation_id, request)
-        except ValueError as error:
+        except ConflictError as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
+        except InvalidRequestError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
         if attempt is None:
             raise HTTPException(status_code=404, detail="conversation not found")
         return attempt
 
     @application.patch(
         "/v1/conversations/{conversation_id}/attempts/{attempt_id}",
-        response_model=AttemptRecord,
+        response_model=AttemptFeedbackResponse,
         tags=["consumer"],
     )
     def update_attempt(
         conversation_id: str, attempt_id: str, request: AttemptUpdateRequest
-    ) -> AttemptRecord:
+    ) -> AttemptFeedbackResponse:
         try:
-            attempt = orchestrator.update_attempt(conversation_id, attempt_id, request)
-        except ValueError as error:
+            result = orchestrator.update_attempt(conversation_id, attempt_id, request)
+        except ConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except InvalidRequestError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-        if attempt is None:
+        if result is None:
             raise HTTPException(status_code=404, detail="attempt not found")
-        return attempt
+        return result
 
     @application.post(
         "/v1/conversations/{conversation_id}/handoff",
@@ -165,7 +172,8 @@ def create_app(
                 message=(
                     "已记录你暂不转人工。请保持设备断电并停止使用，不要拆机或再次通电测试；"
                     "如出现起火、冒烟或漏液，请远离可燃物并联系人工客服处理。"
-                    if conversation.empathy_card.risk_level.value == "high"
+                    if conversation.safety_hold.active
+                    or conversation.empathy_card.risk_level.value == "high"
                     else (
                         "已记录你暂不转人工。由于当前缺少可靠依据，我不会猜测答案；"
                         "你可以补充更多信息后再试。"
@@ -197,6 +205,7 @@ def create_app(
             raise HTTPException(
                 status_code=409, detail="result_id does not match the latest conversation result"
             )
+        orchestrator.inspect_feedback(conversation_id, feedback.comment)
         repository.record_feedback(
             conversation_id, feedback.result_id, feedback.resolved, feedback.comment
         )
@@ -205,6 +214,20 @@ def create_app(
             "feedback_recorded",
             {"resolved": feedback.resolved, "training_use": False},
         )
+
+    @application.post(
+        "/v1/conversations/{conversation_id}/resolution",
+        response_model=TicketRecord,
+        tags=["consumer"],
+    )
+    def confirm_resolution(conversation_id: str, request: ResolutionRequest) -> TicketRecord:
+        try:
+            ticket = orchestrator.confirm_resolution(conversation_id, request)
+        except ConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        if ticket is None:
+            raise HTTPException(status_code=404, detail="ticket not found")
+        return ticket
 
     @application.get("/v1/agent/events", response_model=list[EventSummary], tags=["agent"])
     def list_agent_events() -> list[EventSummary]:
@@ -248,6 +271,7 @@ def create_app(
             orchestrator.record_ticket_result(
                 str(event["conversation_id"]),
                 TicketResultRequest(event=ticket_event, note=request.parameters.get("note")),
+                actor="agent",
             )
         updated = repository.get_event(event_id)
         assert updated is not None
@@ -259,7 +283,10 @@ def create_app(
         tags=["agent"],
     )
     def record_ticket_result(conversation_id: str, request: TicketResultRequest) -> TicketRecord:
-        ticket = orchestrator.record_ticket_result(conversation_id, request)
+        try:
+            ticket = orchestrator.record_ticket_result(conversation_id, request, actor="agent")
+        except ConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
         if ticket is None:
             raise HTTPException(status_code=404, detail="ticket not found")
         return ticket
@@ -331,13 +358,38 @@ textarea,input,button{font:inherit;padding:.7rem;margin:.35rem 0;width:100%}
 button{width:auto}.result{white-space:pre-wrap;background:#f5f5f5;padding:1rem}</style>
 <h1>安克智能服务助手（比赛演示）</h1><p>面向充电器、移动电源等设备，每次只补充一个必要信息，并只调整一个条件。你也可以随时转人工。</p>
 <input id="product" placeholder="产品名称（可选）">
-<textarea id="message" rows="5" placeholder="描述问题和已经尝试的方法"></textarea>
-<button onclick="send()">开始排查</button><div id="result" class="result" aria-live="polite"></div>
-<script>async function send(){
+<textarea id="message" rows="4" placeholder="描述问题和已经尝试的方法"></textarea>
+<button onclick="send()">发送</button>
+<textarea id="observation" rows="3"
+placeholder="步骤观察（出现冒烟、异味或鼓包时直接填写）"></textarea>
+<button onclick="report('executed')">提交观察</button>
+<button onclick="report('skipped')">跳过此步</button>
+<div id="result" class="result" aria-live="polite"></div>
+<script>
+let conversationId=null;let attemptId=null;let revision=1;
+function show(b){
+conversationId=b.conversation_id||conversationId;
+attemptId=(b.current_attempt&&b.current_attempt.attempt_id)||(b.response&&b.response.current_attempt&&b.response.current_attempt.attempt_id)||attemptId;
+const body=b.response||b;
+result.textContent=JSON.stringify({state:body.state||b.state,message:body.message||b.detail,attempt:body.current_attempt||b.current_attempt},null,2);
+}
+async function send(){
 const payload={message:message.value,product:product.value||null};
-const r=await fetch('/v1/conversations',{method:'POST',
+const url=conversationId?('/v1/conversations/'+conversationId+'/messages'):'/v1/conversations';
+const r=await fetch(url,{method:'POST',
 headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
-const b=await r.json();result.textContent=b.message||b.detail;}</script></html>"""
+show(await r.json());
+}
+async function report(status){
+if(!conversationId||!attemptId){result.textContent='当前没有待执行步骤';return;}
+const r=await fetch('/v1/conversations/'+conversationId+'/attempts/'+attemptId,{
+method:'PATCH',headers:{'content-type':'application/json'},
+body:JSON.stringify({execution_status:status,observation:observation.value||null,
+based_on_revision:revision})});
+const b=await r.json();
+if(b.response){show(b);}else{result.textContent=JSON.stringify(b,null,2);}
+}
+</script></html>"""
 
 
 def _agent_workspace_html() -> str:

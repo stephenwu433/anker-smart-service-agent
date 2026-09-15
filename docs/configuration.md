@@ -31,8 +31,8 @@ scripts/dev.sh config/production.env
 | `MONGODB_URI` | string | `mongodb://127.0.0.1:27017` | MongoDB connection URI；credential 只能由 `.env` 或 runtime 注入 |
 | `MONGODB_DATABASE` | string | `smart_service_agent` | MongoDB database name |
 | `MONGODB_TIMEOUT_MS` | integer | `3000` | MongoDB connect 和 server selection timeout |
-| `SCHEMA_VERSION` | string | `1.0` | 共情卡和人工接管包 Schema 版本 |
-| `RULE_VERSION` | string | `risk-rules-v1` | 状态机和风险规则版本 |
+| `SCHEMA_VERSION` | string | `1.1` | 共情卡和人工接管包 Schema 版本 |
+| `RULE_VERSION` | string | `risk-rules-v2` | 状态机和风险规则版本 |
 | `KNOWLEDGE_VERSION` | string | `demo-knowledge-v1` | 当前演示知识版本 |
 | `HANDOFF_ETA_MINUTES` | integer | `30` | 演示人工响应时间；不代表正式 SLA |
 | `INTENT_MINIMUM_CONFIDENCE` | float | `0.7` | 外部意图 provider 结果被采用的最低置信度 |

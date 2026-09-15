@@ -19,9 +19,9 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://127.0.0.1:27017"
     mongodb_database: str = "smart_service_agent"
     mongodb_timeout_ms: int = 3000
-    rule_version: str = "risk-rules-v1"
+    rule_version: str = "risk-rules-v2"
     knowledge_version: str = "demo-knowledge-v1"
-    schema_version: str = "1.0"
+    schema_version: str = "1.1"
     handoff_eta_minutes: int = 30
     intent_minimum_confidence: float = 0.7
 

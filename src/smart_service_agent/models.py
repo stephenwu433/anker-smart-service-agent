@@ -48,6 +48,25 @@ class Inference(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class SafetyHold(BaseModel):
+    active: bool = False
+    reasons: list[str] = Field(default_factory=list)
+    source: Optional[str] = None
+    terms: list[str] = Field(default_factory=list)
+    updated_at: Optional[datetime] = None
+
+
+class JudgmentRecord(BaseModel):
+    judgment_id: str
+    kind: Literal["safety", "missing_information", "answerability"]
+    status: Literal["active", "withdrawn"] = "active"
+    depends_on_facts: list[str] = Field(default_factory=list)
+    summary: str
+    created_at: datetime
+    withdrawn_at: Optional[datetime] = None
+    withdrawn_reason: Optional[str] = None
+
+
 class EmpathyCard(BaseModel):
     conversation_id: str
     surface_issue: str
@@ -86,6 +105,27 @@ class ConversationRequest(BaseModel):
         return self
 
 
+class AttemptRecord(BaseModel):
+    attempt_id: str
+    conversation_id: str
+    recommendation: str
+    purpose: str
+    instructions: str
+    observation_target: str
+    exit_condition: str
+    action_id: Optional[str] = None
+    knowledge_id: Optional[str] = None
+    depends_on_judgments: list[str] = Field(default_factory=list)
+    depends_on_facts: list[str] = Field(default_factory=list)
+    execution_status: Literal["proposed", "executed", "skipped", "withdrawn"] = "proposed"
+    observation: Optional[str] = None
+    outcome: Optional[Literal["improved", "unchanged", "worse", "unknown"]] = None
+    based_on_revision: int = 1
+    superseded_by: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class ConsumerResponse(BaseModel):
     conversation_id: str
     result_id: str
@@ -96,6 +136,7 @@ class ConsumerResponse(BaseModel):
     event_id: Optional[str] = None
     event_status: Optional[str] = None
     estimated_response_at: Optional[datetime] = None
+    current_attempt: Optional[AttemptRecord] = None
 
 
 class HandoffDecision(BaseModel):
@@ -107,6 +148,10 @@ class FeedbackRequest(BaseModel):
     result_id: str
     resolved: bool
     comment: Optional[str] = Field(default=None, max_length=1000)
+
+
+class ResolutionRequest(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=1000)
 
 
 class ServiceActionRequest(BaseModel):
@@ -137,32 +182,19 @@ class CaseRecord(BaseModel):
 
 
 class AttemptCreateRequest(BaseModel):
-    recommendation: str = Field(min_length=1, max_length=1000)
-    purpose: str = Field(min_length=1, max_length=500)
-    instructions: str = Field(min_length=1, max_length=1000)
-    observation_target: str = Field(min_length=1, max_length=500)
-    exit_condition: str = Field(min_length=1, max_length=500)
+    action_id: str = Field(min_length=1, max_length=100)
 
 
 class AttemptUpdateRequest(BaseModel):
     execution_status: Literal["executed", "skipped"]
     observation: Optional[str] = Field(default=None, max_length=1000)
     outcome: Optional[Literal["improved", "unchanged", "worse", "unknown"]] = None
+    based_on_revision: Optional[int] = None
 
 
-class AttemptRecord(BaseModel):
-    attempt_id: str
-    conversation_id: str
-    recommendation: str
-    purpose: str
-    instructions: str
-    observation_target: str
-    exit_condition: str
-    execution_status: Literal["proposed", "executed", "skipped"] = "proposed"
-    observation: Optional[str] = None
-    outcome: Optional[Literal["improved", "unchanged", "worse", "unknown"]] = None
-    created_at: datetime
-    updated_at: datetime
+class AttemptFeedbackResponse(BaseModel):
+    attempt: AttemptRecord
+    response: ConsumerResponse
 
 
 class TicketResultRequest(BaseModel):
@@ -210,6 +242,8 @@ class HandoffPackage(BaseModel):
     rule_version: str
     knowledge_version: str
     ticket: Optional[TicketRecord] = None
+    attempts: list[AttemptRecord] = Field(default_factory=list)
+    case: Optional[CaseRecord] = None
 
 
 class AgentConversationView(BaseModel):
@@ -245,6 +279,8 @@ class StoredConversation(BaseModel):
     unresolved_attempts: int = 0
     case: Optional[CaseRecord] = None
     attempts: list[AttemptRecord] = Field(default_factory=list)
+    judgments: list[JudgmentRecord] = Field(default_factory=list)
+    safety_hold: SafetyHold = Field(default_factory=SafetyHold)
     ticket: Optional[TicketRecord] = None
     created_at: datetime
     updated_at: datetime

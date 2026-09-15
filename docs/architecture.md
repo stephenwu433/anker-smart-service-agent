@@ -15,12 +15,12 @@ FastAPI typed validation
     │
     ▼
 ConversationOrchestrator
+    ├── 统一安全检查（消息 / 观察 / 更正 / 反馈）──► BLOCK（safety_hold 持续生效）
     ├── 附件能力检查 ───────────────► HANDOFF（未接文件 provider）
-    ├── 当前消息安全规则 ───────────► BLOCK
     ├── 必要信息检查 ───────────────► ASK
     ├── IntentProvider + fallback
     └── KnowledgeProvider + answerability
-            ├── 无法充电且有审核依据 ───► GUIDE
+            ├── 无法充电且有审核依据 ───► GUIDE（自动创建当前 Attempt）
             ├── 其他有审核依据 ─────► RESOLVE（兼容状态）
             └── 无可靠依据 ─────────► HANDOFF
     │
@@ -30,9 +30,10 @@ StorageRepository
     └── MemoryRepository（test）
 ```
 
-每个会话内保存一个带 revision history 的 `CaseRecord`、多个 `AttemptRecord` 和一个可选
-`TicketRecord`。Case 更正不会覆盖原始事实；Attempt 将建议、执行状态、观察和结果拆开；Ticket 将
-人工回复、动作完成、用户确认解决和重开拆成带版本事件，从而避免把客服动作完成误报成用户问题已解决。
+每个会话内保存一个带 revision history 的 `CaseRecord`、多个 `AttemptRecord`、判断依赖和一个可选
+`TicketRecord`。Case 更正不会覆盖原始事实，并按 `depends_on_facts` 撤回尚未执行的步骤；Attempt
+由允许动作目录创建，将建议、执行状态、观察和结果拆开；Ticket 将人工回复、动作完成、用户确认解决
+和重开拆成带版本事件。未结束工单复用原服务事件，避免同一案件重复建单。
 
 route 只负责 HTTP contract，状态判断、文案选择和审计数据生成位于 orchestrator；provider output
 必须经过 Pydantic model 校验，不能直接控制持久化或执行客服动作。
@@ -51,10 +52,11 @@ interface 后，强制使用 `EmpathyCard` 校验 model output，并为 timeout�
 `RuleBasedIntentProvider`。设备安全风险和必要追问在 provider 调用前执行，确保外部模型故障时安全
 规则仍有效。意图来源和置信度仅进入 Empathy Card 与客服审计视图，不暴露给消费者。
 
-每轮安全与意图判断以当前消息为主，历史仅用于补充已确认的选购上下文，避免旧风险描述永久污染后续
-问题。rule-based 安全 fallback 可识别常见否定、假设、第三方主体和已恢复表达；它只能降低明显
-误报，不能替代 LLM/NLU 的语义判断。附件在文件 provider 接入前会明确说明无法读取并进入人工
-确认流程，不会根据 filename 或 metadata 猜测内容。
+设备安全风险在消息、步骤观察、事实更正和反馈入口统一检查，并写入 `safety_hold`。未明确解除前，
+换话题、继续使用或附件转人工都不能恢复排查。rule-based 安全 fallback 可识别常见否定、假设、
+第三方主体和已恢复表达；它只能降低明显误报，不能替代 LLM/NLU 的语义判断。附件在文件 provider
+接入前会明确说明无法读取；若当前消息已命中风险，则先进入 `BLOCK`，不会根据 filename 或 metadata
+猜测内容。
 
 MongoDB 使用 `conversations`、`audit_events`、`service_events`、`feedback` 和
 `service_actions` collection。应用首次访问 persistence 时自动建立查询 indexes；其中

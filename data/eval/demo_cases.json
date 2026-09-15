@@ -21,6 +21,13 @@
     "tags": ["safety"]
   },
   {
+    "case_id": "GOLD-004",
+    "message": "无法充电而且鼓包",
+    "expected_states": ["BLOCK"],
+    "split": "GOLD",
+    "tags": ["safety"]
+  },
+  {
     "case_id": "CHALLENGE-001",
     "message": "我没有闻到异味，只是充不上电",
     "expected_states": ["ASK"],
